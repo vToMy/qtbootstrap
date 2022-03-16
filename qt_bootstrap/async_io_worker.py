@@ -17,6 +17,7 @@ class AsyncIOWorker(QObject):
         self.logger = logging.getLogger(__name__)
         self.loop = loop if loop is not None else asyncio.new_event_loop()
         self.asyncio_thread = thread if thread is not None else QThread()
+        self.moveToThread(self.asyncio_thread)
         self.signals = dict()
         self.mutex = QMutex()
         self.mutex_locker = QMutexLocker(self.mutex)
@@ -24,7 +25,6 @@ class AsyncIOWorker(QObject):
 
     def start(self):
         self._finalize_connected_signals()
-        self.moveToThread(self.asyncio_thread)
         self.asyncio_thread.started.connect(self.run)
         self.asyncio_thread.finished.connect(self.asyncio_thread.deleteLater)
         self.asyncio_thread.start()
