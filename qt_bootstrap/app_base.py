@@ -9,15 +9,15 @@ from PySide6.QtNetwork import QLocalSocket, QLocalServer
 
 class ApplicationBase(QApplication):
 
-    SIGNALS_TIMER_INTERVAL_MS = 500
+    DEFAULT_SIGNALS_TIMER_INTERVAL_MS = 500
 
     message_received = Signal(str)
     new_connection = Signal()
     sigint = Signal()
 
-    def __init__(self, id_=None, *args, **kwargs):
+    def __init__(self, id_=None, signals_timer_interval_ms=DEFAULT_SIGNALS_TIMER_INTERVAL_MS, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._setup_signals()
+        self._setup_signals(signals_timer_interval_ms)
 
         self.logger = logging.getLogger(__name__)
         self._id = id_
@@ -77,12 +77,12 @@ class ApplicationBase(QApplication):
                 break
             self.message_received.emit(msg)
 
-    def _setup_signals(self):
+    def _setup_signals(self, signals_timer_interval_ms):
         signal.signal(signal.SIGINT, lambda *args: self.sigint.emit())
         # this noop timer is needed for sigint processing to work: https://stackoverflow.com/a/4939113
         timer = QTimer(self)
         timer.timeout.connect(lambda: None)
-        timer.setInterval(self.SIGNALS_TIMER_INTERVAL_MS)
+        timer.setInterval(signals_timer_interval_ms)
         timer.start()
 
     def activate_widget(self, widget: QWidget):
