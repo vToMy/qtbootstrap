@@ -1,6 +1,6 @@
 # Bootstrap for python QT apps
 
-## Features:
+## Features
 * Catch `sigint` signal (handle however you want).
 * Single-instance app (with inter-instance communication).
 * asyncio worker thread for background processing:
