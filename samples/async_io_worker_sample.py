@@ -2,9 +2,9 @@ import sys
 
 from PySide6.QtWidgets import QPushButton
 
-from app.app_base import ApplicationBase
-from app import signal_base
-from app.async_io_worker import AsyncIOWorker
+from qt_bootstrap.app_base import ApplicationBase
+from qt_bootstrap import signal_base
+from qt_bootstrap.async_io_worker import AsyncIOWorker
 
 
 class SampleClass:

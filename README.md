@@ -10,4 +10,4 @@
   * Complete isolation of business logic and GUI.
 
 ## Samples
-See the `samples` folder
+See the `samples` folder.
