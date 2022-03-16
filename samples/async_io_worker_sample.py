@@ -36,16 +36,17 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     app = SampleApp()
     worker = AsyncIOWorker()
+    worker.asyncio_thread.setObjectName('asyncio-worker')
     sample_instance = SampleClass()
     widget = SampleButton('Run task')
 
-    worker.finished.connect(lambda: logging.debug('worker finished'))
+    worker.finished.connect(lambda: logging.debug('on %s finished', worker.asyncio_thread.objectName()))
     app.sigint.connect(app.quit)
     # gui thread -> asyncio thread
     widget.pressed.connect(lambda: worker.create_task(sample_instance.sample_task()))
     # asyncio thread -> gui thread
     worker.connect_signal(sample_instance.sample_signal, lambda text: widget.setText(text))
 
-    widget.show()
     worker.start()
+    widget.show()
     sys.exit(app.exec())
