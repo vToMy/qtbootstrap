@@ -94,4 +94,3 @@ class AsyncIOWorker(QObject):
                 qt_signal.connect(slot, Qt.QueuedConnection)
             signal.connect(qt_signal.emit)
         self._signals_added = True
-

@@ -24,7 +24,7 @@ class SampleApp(ApplicationBase):
         worker.stop()
         worker.quit()
         worker.wait()
-        app.processEvents()  # process handling of worker finished signal before quiting
+        self.processEvents()  # process handling of worker finished signal before quiting
         super().quit()
 
 
