@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from PySide6.QtWidgets import QPushButton
@@ -15,17 +16,15 @@ class SampleClass:
     sample_signal = signal_base.Signal(str)
 
     async def sample_task(self):
-        print('task running')
+        logging.debug('task running')
         self.sample_signal.emit('Run task again')
 
 
 class SampleApp(ApplicationBase):
     def quit(self):
+        quit_func = super().quit
         worker.stop()
-        worker.quit()
-        worker.wait()
-        self.processEvents()  # process handling of worker finished signal before quiting
-        super().quit()
+        worker.finished.connect(quit_func)
 
 
 class SampleButton(QPushButton):
@@ -34,12 +33,13 @@ class SampleButton(QPushButton):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     app = SampleApp()
     worker = AsyncIOWorker()
     sample_instance = SampleClass()
     widget = SampleButton('Run task')
 
-    worker.finished.connect(lambda: print('worker finished'))
+    worker.finished.connect(lambda: logging.debug('worker finished'))
     app.sigint.connect(app.quit)
     # gui thread -> asyncio thread
     widget.pressed.connect(lambda: worker.create_task(sample_instance.sample_task()))

@@ -32,6 +32,7 @@ class AsyncIOWorker(QObject):
     def run(self):
         if self.thread().objectName():
             threading.current_thread().name = self.thread().objectName()
+        self.logger.debug('%s started', self.thread().objectName())
         asyncio.set_event_loop(self.loop)
         try:
             self.loop.run_forever()
@@ -39,16 +40,20 @@ class AsyncIOWorker(QObject):
             pass
         finally:
             self.finished.emit()
+            self.logger.debug('%s finished', self.thread().objectName())
 
     def stop(self):
         with self.mutex_locker:
+            self.logger.debug('Stopping %s', self.thread().objectName())
             self.loop.call_soon_threadsafe(self.loop.stop)
 
     def quit(self):
+        self.logger.debug('Quitting %s', self.thread().objectName())
         self.asyncio_thread.quit()
 
-    def wait(self):
-        self.asyncio_thread.wait()
+    def wait(self, *args, **kwargs):
+        self.logger.debug('Waiting for %s', self.thread().objectName())
+        self.asyncio_thread.wait(*args, **kwargs)
 
     def create_task(self, coroutine: Coroutine, log_exception=True) -> Future:
         with self.mutex_locker:
