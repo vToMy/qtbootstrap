@@ -44,15 +44,15 @@ class AsyncIOWorker(QObject):
 
     def stop(self):
         with self.mutex_locker:
-            self.logger.debug('Stopping %s', self.thread().objectName())
+            self.logger.debug('Stopping %s', self.asyncio_thread.objectName())
             self.loop.call_soon_threadsafe(self.loop.stop)
 
     def quit(self):
-        self.logger.debug('Quitting %s', self.thread().objectName())
+        self.logger.debug('Quitting %s', self.asyncio_thread.objectName())
         self.asyncio_thread.quit()
 
     def wait(self, *args, **kwargs):
-        self.logger.debug('Waiting for %s', self.thread().objectName())
+        self.logger.debug('Waiting for %s', self.asyncio_thread.objectName())
         self.asyncio_thread.wait(*args, **kwargs)
 
     def create_task(self, coroutine: Coroutine, log_exception=True) -> Future:
