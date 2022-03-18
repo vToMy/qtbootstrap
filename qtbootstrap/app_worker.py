@@ -1,5 +1,5 @@
 from qtbootstrap.app_base import ApplicationBase
-from qtbootstrap.async_io_worker import AsyncIOWorker
+from qtbootstrap.asyncio_worker import AsyncIOWorker
 
 
 class ApplicationWithWorker(ApplicationBase):
@@ -13,5 +13,5 @@ class ApplicationWithWorker(ApplicationBase):
 
     def quit(self):
         quit_func = super().quit
-        self.asyncio_worker.stop()
+        self.asyncio_worker.quit()
         self.asyncio_worker.finished.connect(quit_func)

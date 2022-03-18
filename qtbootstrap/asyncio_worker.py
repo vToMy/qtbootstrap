@@ -47,12 +47,10 @@ class AsyncIOWorker(QObject):
             self.finished.emit()
             self.logger.debug('%s finished', self.thread().objectName())
 
-    def stop(self):
+    def quit(self):
         with self.mutex_locker:
             self.logger.debug('Stopping %s', self.thread().objectName())
             self.loop.call_soon_threadsafe(self.loop.stop)
-
-    def quit(self):
         self.logger.debug('Quitting %s', self.thread().objectName())
         self.asyncio_thread.quit()
 
