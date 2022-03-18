@@ -1,6 +1,7 @@
 import logging
 import sys
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QPushButton
 
 from qtbootstrap import signal_base
@@ -24,17 +25,24 @@ if __name__ == '__main__':
                         level=logging.DEBUG)
     logging.getLogger('asyncio').setLevel(logging.WARNING)
 
+    # instantiation
     app = ApplicationWithWorker()
     sample_instance = SampleClass()
     widget = QPushButton('Run task')
-    widget.closeEvent = lambda event: app.quit()
 
-    app.asyncio_worker.finished.connect(lambda: logging.debug('on %s finished',
-                                                              app.asyncio_worker.asyncio_thread.objectName()))
+    # signals
     app.sigint.connect(app.quit)
+    widget.closeEvent = lambda event: app.quit()
+    # use `DirectConnection` since after quitting the app, the main thread event loop is closed,
+    # so the signal should run in the thread's event loop (just before closing)
+    app.asyncio_worker.finished.connect(lambda: logging.debug('on %s finished',
+                                                              app.asyncio_worker.asyncio_thread.objectName()),
+                                        Qt.DirectConnection)
     # gui thread -> asyncio thread
     widget.pressed.connect(lambda: app.asyncio_worker.create_task(sample_instance.sample_task()))
     # asyncio thread -> gui thread
     app.asyncio_worker.connect_signal(sample_instance.sample_signal, lambda text: widget.setText(text))
+
+    # start app
     widget.show()
     sys.exit(app.exec())
