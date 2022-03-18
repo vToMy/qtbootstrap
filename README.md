@@ -5,8 +5,8 @@
 * Single-instance app (with inter-instance communication).
 * asyncio worker thread for background processing:
   * This is an alternative to [qasync](https://github.com/CabbageDevelopment/qasync).
-  * Instead of the while app running async, there 2 threads: GUI thread and asyncio thread.
-  * This ensures that even if the asyncio thread is performing badly, the GUI will not be affected.
+  * Instead of the app running async, there 2 threads: GUI thread and asyncio thread.
+  * This ensures that even if the asyncio thread is performing poorly, the GUI will not be affected.
   * Complete isolation of business logic and GUI.
 
 ## Samples

@@ -15,8 +15,13 @@ class AsyncIOWorker(QObject):
     def __init__(self, loop: asyncio.AbstractEventLoop = None, thread: QThread = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(__name__)
+        self.setObjectName(self.__class__.__name__)
         self.loop = loop if loop is not None else asyncio.new_event_loop()
-        self.asyncio_thread = thread if thread is not None else QThread()
+        if thread:
+            self.asyncio_thread = thread
+        else:
+            self.asyncio_thread = QThread()
+            self.asyncio_thread.setObjectName(self.__class__.__name__ + 'Thread')
         self.moveToThread(self.asyncio_thread)
         self.signals = dict()
         self.mutex = QMutex()

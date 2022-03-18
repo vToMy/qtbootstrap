@@ -17,10 +17,9 @@ class ApplicationBase(QApplication):
 
     def __init__(self, id_=None, signals_timer_interval_ms=DEFAULT_SIGNALS_TIMER_INTERVAL_MS, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._setup_signals(signals_timer_interval_ms)
-
         self.logger = logging.getLogger(__name__)
         self._id = id_
+        self.signals_timer_interval_ms = signals_timer_interval_ms
 
         if self._id:
             # Is there another instance running?
@@ -43,14 +42,19 @@ class ApplicationBase(QApplication):
                     self.logger.warning('Cannot listen to other instances')
                 self._server.newConnection.connect(self._on_new_connection)
 
+    def exec(self) -> int:
+        # setting the sigint signal just before starting the app so we'll have access to the event loop
+        self._setup_signals(self.signals_timer_interval_ms)
+        return super().exec()
+
     @property
     def is_running(self):
-        """ Is another instance of this qt_bootstrap already running? """
+        """ Is another instance of this qtbootstrap already running? """
         return self._is_running
 
     @property
     def id(self):
-        """ Unique id for the qt_bootstrap, used to identify if the qt_bootstrap is already running """
+        """ Unique id for the qtbootstrap, used to identify if the qtbootstrap is already running """
         return self._id
 
     def send_message(self, msg):

@@ -3,9 +3,8 @@ import sys
 
 from PySide6.QtWidgets import QPushButton
 
-from qt_bootstrap.app_base import ApplicationBase
-from qt_bootstrap import signal_base
-from qt_bootstrap.async_io_worker import AsyncIOWorker
+from qtbootstrap import signal_base
+from qtbootstrap.app_worker import ApplicationWithWorker
 
 
 class SampleClass:
@@ -20,33 +19,22 @@ class SampleClass:
         self.sample_signal.emit('Run task again')
 
 
-class SampleApp(ApplicationBase):
-    def quit(self):
-        quit_func = super().quit
-        worker.stop()
-        worker.finished.connect(quit_func)
-
-
-class SampleButton(QPushButton):
-    def closeEvent(self, event):
-        app.quit()
-
-
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    app = SampleApp()
-    worker = AsyncIOWorker()
-    worker.asyncio_thread.setObjectName('asyncio-worker')
-    sample_instance = SampleClass()
-    widget = SampleButton('Run task')
+    logging.basicConfig(format='%(asctime)s - %(threadName)-19s - %(name)-27s - %(levelname)s - %(message)s',
+                        level=logging.DEBUG)
+    logging.getLogger('asyncio').setLevel(logging.WARNING)
 
-    worker.finished.connect(lambda: logging.debug('on %s finished', worker.asyncio_thread.objectName()))
+    app = ApplicationWithWorker()
+    sample_instance = SampleClass()
+    widget = QPushButton('Run task')
+    widget.closeEvent = lambda event: app.quit()
+
+    app.asyncio_worker.finished.connect(lambda: logging.debug('on %s finished',
+                                                              app.asyncio_worker.asyncio_thread.objectName()))
     app.sigint.connect(app.quit)
     # gui thread -> asyncio thread
-    widget.pressed.connect(lambda: worker.create_task(sample_instance.sample_task()))
+    widget.pressed.connect(lambda: app.asyncio_worker.create_task(sample_instance.sample_task()))
     # asyncio thread -> gui thread
-    worker.connect_signal(sample_instance.sample_signal, lambda text: widget.setText(text))
-
-    worker.start()
+    app.asyncio_worker.connect_signal(sample_instance.sample_signal, lambda text: widget.setText(text))
     widget.show()
     sys.exit(app.exec())
