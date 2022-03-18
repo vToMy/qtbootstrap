@@ -16,7 +16,11 @@ class AsyncIOWorker(QObject):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(__name__)
         self.setObjectName(self.__class__.__name__)
-        self.loop = loop if loop is not None else asyncio.new_event_loop()
+        if loop:
+            self.loop = loop
+        else:
+            self.loop = asyncio.new_event_loop()
+            self.loop.set_exception_handler(self._exception_handler)
         if thread:
             self.asyncio_thread = thread
         else:
@@ -41,9 +45,8 @@ class AsyncIOWorker(QObject):
         asyncio.set_event_loop(self.loop)
         try:
             self.loop.run_forever()
-        except KeyboardInterrupt:
-            pass
         finally:
+            self._handle_loop_close()
             self.finished.emit()
             self.logger.debug('%s finished', self.thread().objectName())
 
@@ -102,3 +105,38 @@ class AsyncIOWorker(QObject):
                 qt_signal.connect(slot, Qt.QueuedConnection)
             signal.connect(qt_signal.emit)
         self._signals_added = True
+
+    def _handle_loop_close(self):
+        """ copied from asyncio.run source code """
+        try:
+            self._cancel_all_tasks()
+            self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+            self.loop.run_until_complete(self.loop.shutdown_default_executor())
+        finally:
+            self.loop.close()
+
+    def _cancel_all_tasks(self):
+        """ copied from asyncio.run source code """
+        to_cancel = asyncio.all_tasks(self.loop)
+        if not to_cancel:
+            return
+
+        for task in to_cancel:
+            task.cancel()
+
+        self.loop.run_until_complete(asyncio.gather(*to_cancel, return_exceptions=True))
+
+        for task in to_cancel:
+            if task.cancelled():
+                continue
+            if task.exception() is not None:
+                self.loop.call_exception_handler(
+                    {
+                        "message": "unhandled exception during asyncio.run() shutdown",
+                        "exception": task.exception(),
+                        "task": task,
+                    }
+                )
+
+    def _exception_handler(self, loop, context):
+        self.logger.error('Uncaught exception: %s', context.get('message'), exc_info=context.get('exception'))
