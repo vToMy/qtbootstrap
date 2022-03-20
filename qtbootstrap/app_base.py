@@ -49,12 +49,12 @@ class ApplicationBase(QApplication):
 
     @property
     def is_running(self):
-        """ Is another instance of this qtbootstrap already running? """
+        """ Is another instance of this app already running? """
         return self._is_running
 
     @property
     def id(self):
-        """ Unique id for the qtbootstrap, used to identify if the qtbootstrap is already running """
+        """ Unique id for the app, used to identify if the app is already running """
         return self._id
 
     def send_message(self, msg):
