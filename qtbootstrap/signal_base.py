@@ -32,4 +32,4 @@ class Signal:
 
     def __set_name__(self, owner, name):
         if self.name is None:
-            self.name = name
+            self.name = f'{owner.__qualname__}_{name}'

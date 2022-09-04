@@ -10,7 +10,7 @@ from qtbootstrap.app_worker import ApplicationWithWorker
 
 class SampleClass:
     # you can use signals without specifying a name only at class-level:
-    # * the name will be auto-generated based on the variable name.
+    # * the name will be auto-generated based on the class name and variable name.
     # * the variable name must be globally unique! (otherwise, please specify unique name using a keyword argument)
     # notice this is a minimal pure-python signal, not a qt signal, so you decouple your logic from qt
     sample_signal = signal_base.Signal(str)
