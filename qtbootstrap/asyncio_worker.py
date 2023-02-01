@@ -29,7 +29,6 @@ class AsyncIOWorker(QObject):
         self.moveToThread(self.asyncio_thread)
         self.signals = dict()
         self.mutex = QMutex()
-        self.mutex_locker = QMutexLocker(self.mutex)
         self._signals_added = False
 
     def start(self):
@@ -51,7 +50,7 @@ class AsyncIOWorker(QObject):
             self.logger.debug('%s finished', self.thread().objectName())
 
     def quit(self):
-        with self.mutex_locker:
+        with QMutexLocker(self.mutex):
             self.logger.debug('Stopping %s', self.thread().objectName())
             self.loop.call_soon_threadsafe(self.loop.stop)
         self.logger.debug('Quitting %s', self.thread().objectName())
@@ -62,14 +61,14 @@ class AsyncIOWorker(QObject):
         self.asyncio_thread.wait(*args, **kwargs)
 
     def create_task(self, coroutine: Coroutine, log_exception=True) -> Future:
-        with self.mutex_locker:
+        with QMutexLocker(self.mutex):
             future = asyncio.run_coroutine_threadsafe(coroutine, self.loop)
             if log_exception:
                 future.add_done_callback(self._on_future_done)
             return future
 
     def call_soon(self, func, *args):
-        with self.mutex_locker:
+        with QMutexLocker(self.mutex):
             self.loop.call_soon_threadsafe(func, *args)
 
     def _on_future_done(self, future: Future):
