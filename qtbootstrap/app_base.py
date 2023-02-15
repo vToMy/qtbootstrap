@@ -6,6 +6,8 @@ from PySide6.QtCore import Signal, QTextStream, QTimer
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtNetwork import QLocalSocket, QLocalServer
 
+from qtbootstrap.native_event_filter import NativeEventFilter
+
 
 class ApplicationBase(QApplication):
 
@@ -14,12 +16,17 @@ class ApplicationBase(QApplication):
     message_received = Signal(str)
     new_connection = Signal()
     sigint = Signal()
+    query_end_session = Signal()
+    usb_connected_or_disconnected = Signal()
 
     def __init__(self, id_=None, signals_timer_interval_ms=DEFAULT_SIGNALS_TIMER_INTERVAL_MS, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(__name__)
         self._id = id_
         self.signals_timer_interval_ms = signals_timer_interval_ms
+        self.native_event_filter = NativeEventFilter(
+            query_end_session_signal=self.query_end_session,
+            usb_connected_or_disconnected_signal=self.usb_connected_or_disconnected)
 
         if self._id:
             # Is there another instance running?
@@ -88,6 +95,7 @@ class ApplicationBase(QApplication):
         timer.timeout.connect(lambda: None)
         timer.setInterval(signals_timer_interval_ms)
         timer.start()
+        self.installNativeEventFilter(self.native_event_filter)
 
     def activate_widget(self, widget: QWidget):
         # bring window to top and act like a "normal" window!
