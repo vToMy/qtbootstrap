@@ -60,7 +60,6 @@ class ApplicationBase(QApplication):
     def send_message(self, msg):
         if not self._out_stream:
             return False
-        self
         self._out_stream << msg << '\n'
         self._out_stream.flush()
         return self._out_socket.waitForBytesWritten()
