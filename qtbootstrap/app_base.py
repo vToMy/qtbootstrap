@@ -29,11 +29,11 @@ class ApplicationBase(QApplication):
 
             if self._is_running:
                 # Yes, there is.
-                self._outStream = QTextStream(self._out_socket)
+                self._out_stream = QTextStream(self._out_socket)
             else:
                 # No, there isn't.
                 self._out_socket = None
-                self._outStream = None
+                self._out_stream = None
                 self._in_socket = None
                 self._in_stream = None
                 self._server = QLocalServer()
@@ -58,10 +58,11 @@ class ApplicationBase(QApplication):
         return self._id
 
     def send_message(self, msg):
-        if not self._outStream:
+        if not self._out_stream:
             return False
-        self._outStream << msg << '\n'
-        self._outStream.flush()
+        self
+        self._out_stream << msg << '\n'
+        self._out_stream.flush()
         return self._out_socket.waitForBytesWritten()
 
     def _on_new_connection(self):
