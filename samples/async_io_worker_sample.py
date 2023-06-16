@@ -31,8 +31,6 @@ if __name__ == '__main__':
     widget = QPushButton('Run task')
 
     # signals
-    app.sigint.connect(app.quit)
-    app.query_end_session.connect(app.quit)
     widget.closeEvent = lambda event: app.quit()
     # use `DirectConnection` since after quitting the app, the main thread event loop is closed,
     # so the signal should run in the thread's event loop (just before closing)

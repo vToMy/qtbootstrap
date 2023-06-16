@@ -1,4 +1,5 @@
 import logging
+import platform
 import signal
 
 from PySide6 import QtCore
@@ -16,17 +17,30 @@ class ApplicationBase(QApplication):
     message_received = Signal(str)
     new_connection = Signal()
     sigint = Signal()
-    query_end_session = Signal()
-    usb_connected_or_disconnected = Signal()
+    query_end_session_signal = Signal()
+    end_session_signal = Signal()
+    device_change_signal = Signal()
 
-    def __init__(self, id_=None, signals_timer_interval_ms=DEFAULT_SIGNALS_TIMER_INTERVAL_MS, *args, **kwargs):
+    def __init__(self, id_=None, signals_timer_interval_ms=DEFAULT_SIGNALS_TIMER_INTERVAL_MS,
+                 auto_handle_close_events: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(__name__)
         self._id = id_
         self.signals_timer_interval_ms = signals_timer_interval_ms
-        self.native_event_filter = NativeEventFilter(
-            query_end_session_signal=self.query_end_session,
-            usb_connected_or_disconnected_signal=self.usb_connected_or_disconnected)
+        self.native_event_filter = None
+        if platform.system() == 'Windows':
+            import win32con
+            self.native_event_filter = NativeEventFilter(
+                message_to_signal={
+                    # https://learn.microsoft.com/en-us/windows/win32/shutdown/wm-queryendsession
+                    win32con.WM_QUERYENDSESSION: self.query_end_session_signal,
+                    # https://learn.microsoft.com/en-us/windows/win32/shutdown/wm-endsession
+                    win32con.WM_ENDSESSION: self.end_session_signal,
+                    win32con.WM_CLOSE: None,
+                    win32con.WM_QUIT: None,
+                    # https://learn.microsoft.com/en-us/windows/win32/devio/wm-devicechange
+                    win32con.WM_DEVICECHANGE: self.device_change_signal
+                })
 
         if self._id:
             # Is there another instance running?
@@ -48,9 +62,11 @@ class ApplicationBase(QApplication):
                 if not self._server.listen(self._id):
                     self.logger.warning('Cannot listen to other instances')
                 self._server.newConnection.connect(self._on_new_connection)
+        if auto_handle_close_events:
+            self._setup_close_events_signals()
 
     def exec(self) -> int:
-        # setting the sigint signal just before starting the app so we'll have access to the event loop
+        # setting the sigint signal just before starting the app, so we'll have access to the event loop
         self._setup_signals(self.signals_timer_interval_ms)
         return super().exec()
 
@@ -95,7 +111,8 @@ class ApplicationBase(QApplication):
         timer.timeout.connect(lambda: None)
         timer.setInterval(signals_timer_interval_ms)
         timer.start()
-        self.installNativeEventFilter(self.native_event_filter)
+        if self.native_event_filter:
+            self.installNativeEventFilter(self.native_event_filter)
 
     def activate_widget(self, widget: QWidget):
         # bring window to top and act like a "normal" window!
@@ -108,3 +125,7 @@ class ApplicationBase(QApplication):
         # makes window reappear, acts like normal window now
         # (on top now but can be underneath if you raise another window)
         widget.show()
+
+    def _setup_close_events_signals(self):
+        self.sigint.connect(self.quit)
+        self.end_session_signal.connect(lambda message: self.quit() if message.wParam else None)

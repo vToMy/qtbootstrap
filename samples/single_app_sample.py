@@ -13,8 +13,6 @@ if __name__ == '__main__':
     # activate running app when trying to run a new instance
     app.new_connection.connect(lambda: app.activate_widget(widget))
     app.message_received.connect(lambda message: print(f'received message from another instance: {message}'))
-    app.sigint.connect(app.quit)
-    app.query_end_session.connect(app.quit)
 
     widget = QWidget()
     widget.show()
