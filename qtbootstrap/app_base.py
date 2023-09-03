@@ -17,9 +17,9 @@ class ApplicationBase(QApplication):
     message_received = Signal(str)
     new_connection = Signal()
     sigint = Signal()
-    query_end_session_signal = Signal()
-    end_session_signal = Signal()
-    device_change_signal = Signal()
+    query_end_session_signal = Signal(object)
+    end_session_signal = Signal(object)
+    device_change_signal = Signal(object)
 
     def __init__(self, id_=None, signals_timer_interval_ms=DEFAULT_SIGNALS_TIMER_INTERVAL_MS,
                  auto_handle_close_events: bool = True, *args, **kwargs):
